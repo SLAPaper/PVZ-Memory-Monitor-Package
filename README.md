@@ -2,6 +2,9 @@
 Tool to Show the HP of Red-eyes in Plants vs. Zombies
 
 ## v0.0.2
+### Screenshot
+![screenshot](https://cloud.githubusercontent.com/assets/7543632/11874625/b3c9ee5a-a51b-11e5-84ef-87dd83855af8.png)
+
 ### English introduction
 - Use Python 3.5.1
 - Test on Python 3.5.1, Windows 10 Build 10586 (x64)
