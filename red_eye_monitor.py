@@ -1,10 +1,10 @@
 # below is User config
 WINDOW_TITLE = "Plants vs. Zombies"
-TRACK_TYPE = (7, 32,)
+TRACK_TYPE = (32,)
 ROW_GROUPS = ((1,), (2,), (3,), (4,), (5,), (6,),)
 REFRESH_TIME = 1
 REPLACE_X_WITH_COLUMN = True
-SHOW_STATISTIC = True
+SHOW_STATISTIC = False
 STATISTIC_ROW_GROUPS = ROW_GROUPS
 STATISTIC_TRACK_TYPE = (3, 8, 12, 14, 15, 17, 23, 32,)
 # above is User config

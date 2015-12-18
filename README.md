@@ -21,11 +21,11 @@ Tool to Show the HP of Red-eyes in Plants vs. Zombies
 - Press Ctrl-C to exit
 - Config is at the top of `red_eye_monitor.py`
   - `WINDOW_TITLE` is the name of game Window, default is `"Plants vs. Zombies"`
-  - `TRACK_TYPE` is the zombie type the tool will keep track of (refer to `ZOMBIE_NAME` below), default is `(7, 32,)` (which is Rugby(football) and Red-eye)
+  - `TRACK_TYPE` is the zombie type the tool will keep track of (refer to `ZOMBIE_NAME` below), default is `(32,)` (which is Red-eye)
   - `ROW_GROUPS` is the way zombie list will be output, default is `((1,), (2,), (3,), (4,), (5,), (6,),)` (group by each row)
   - `REFRESH_TIME` is the period that the tool refresh the data, default is `1`(s)
   - `REPLACE_X_WITH_COLUMN` is whether to use column to replace x, default is `True`
-  - `SHOW_STATISTIC` is whether to show zombie statistics, deafult is `True`
+  - `SHOW_STATISTIC` is whether to show zombie statistics, deafult is `False`
   - `STATISTIC_ROW_GROUPS` is the way to group zombies, default is `ROW_GROUPS` (the same as `ROW_GROUPS`)
   - `STATISTIC_TRACK_TYPE` is the zombie type to count in statistic, by default is `(3, 8, 12, 14, 15, 17, 23, 32,)`
 
@@ -42,10 +42,10 @@ Tool to Show the HP of Red-eyes in Plants vs. Zombies
 - 按组合键Ctrl+C来退出
 - 用户设置在 `red_eye_monitor.py` 的顶部
   - `WINDOW_TITLE` 是游戏窗口的名字，默认值为 `"Plants vs. Zombies"`
-  - `TRACK_TYPE` 是需要追踪的僵尸类型（参考下方的`ZOMBIE_NAME`），默认值为`(7, 32,)`（橄榄球和红眼）
+  - `TRACK_TYPE` 是需要追踪的僵尸类型（参考下方的`ZOMBIE_NAME`），默认值为`(32,)`（红眼）
   - `ROW_GROUPS` 是僵尸按行分组的方式，默认值为 `((1,), (2,), (3,), (4,), (5,), (6,),)` （每行都分别输出）
   - `REFRESH_TIME` 是工具刷新数据的周期，默认值为 `1`（秒）
   - `REPLACE_X_WITH_COLUMN` 是是否用“列”来代替“x”坐标，默认值为 `True`
-  - `SHOW_STATISTIC` 是是否显示僵尸统计，默认值是 `True`
+  - `SHOW_STATISTIC` 是是否显示僵尸统计，默认值是 `False`
   - `STATISTIC_ROW_GROUPS` 是僵尸统计中分组的方式，默认值为 `ROW_GROUPS` （即和`ROW_GROUPS`一致）
   - `STATISTIC_TRACK_TYPE` 是僵尸统计中需要计数的僵尸类型，默认值为 `(3, 8, 12, 14, 15, 17, 23, 32,)`
