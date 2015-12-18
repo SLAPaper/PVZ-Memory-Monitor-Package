@@ -6,7 +6,7 @@ Tool to Show the HP of Red-eyes in Plants vs. Zombies
 
 ### Screenshot
 
-![screenshot](https://cloud.githubusercontent.com/assets/7543632/11874625/b3c9ee5a-a51b-11e5-84ef-87dd83855af8.png)
+![screenshot](https://cloud.githubusercontent.com/assets/7543632/11896650/6545a212-a5c3-11e5-934f-009312271d06.png)
 
 ### English introduction
 
