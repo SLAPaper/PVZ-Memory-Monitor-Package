@@ -1,6 +1,18 @@
-import os, time, ctypes, win32ui, win32process, win32api
-from win32file import GENERIC_READ
+# below is User config
+WINDOW_TITLE = "Plants vs. Zombies"
+ROW_GROUPS = ((1,), (2,), (3,), (4,), (5,), (6,),)
+REFRESH_TIME = 1
+# above is User config
+
+import os, time, ctypes
 from collections import OrderedDict
+
+try:
+    import win32ui, win32process, win32api
+    from win32file import GENERIC_READ
+except ImportError:
+    print("The tool requires `pypiwin32` module, try `pip install pypiwin32` to install.")
+    exit(1)
 
 # reference: http://tieba.baidu.com/p/2843347257?fr=good
 pvz = {
@@ -24,7 +36,7 @@ pvz = {
                     "type": "int32",
                 },
                 "x": {
-                    "addr": 0x2C, 
+                    "addr": 0x2C,
                     "type": "float",
                 },
                 "y": {
@@ -69,10 +81,9 @@ pvz = {
                 },
             },
         },
-    },
+    }
 }
 
-WINDOW_TITLE = "Plants vs. Zombies"
 rPM = ctypes.windll.kernel32.ReadProcessMemory
 
 def read_helper(handle, address, ctypes_var, n_bytes):
@@ -89,20 +100,21 @@ def print_sorted_by_x(zombie_list, group_by_row=None):
         
         for zombie in zombie_list:
             for row_group in group_by_row:
-                if zombie["row"] in row_group:
+                if zombie["row"] + 1 in row_group:
                      zombie_group_by_row[tuple(row_group)].append(zombie)
         
         for item in zombie_group_by_row.items():
-            print("Row (", end="")
-            for row_index in range(len(item[0])):
-                if row_index != 0:
-                    print(", ", end="")
-                print(item[0][row_index] + 1, end="")
-            print(")\nHP\tRow\tx")
-            sorted_zombie_list = sorted(item[1], key=lambda item: item["x"])
-            for item in sorted_zombie_list:
-                print("%d\t%d\t%.2f" % (item["hp"], item["row"] + 1, item["x"]))
-            print("")
+            if len(item[1]) > 0:
+                print("Row ", end="")
+                for row_index in range(len(item[0])):
+                    if row_index != 0:
+                        print(", ", end="")
+                    print(item[0][row_index], end="")
+                print("\nHP\tRow\tx")
+                sorted_zombie_list = sorted(item[1], key=lambda item: item["x"])
+                for item in sorted_zombie_list:
+                    print("%d\t%d\t%.2f" % (item["hp"], item["row"] + 1, item["x"]))
+                print("")
     else:
         sorted_zombie_list = sorted(zombie_list, key=lambda item: item["x"])
         
@@ -110,53 +122,59 @@ def print_sorted_by_x(zombie_list, group_by_row=None):
         for item in sorted_zombie_list:
             print("%d\t%d\t%.2f" % (item["hp"], item["row"] + 1, item["x"]))
 
-window = win32ui.FindWindow(None, WINDOW_TITLE) 
-hwnd = window.GetSafeHwnd()
-pid = win32process.GetWindowThreadProcessId(hwnd)[1]
-process = win32api.OpenProcess(GENERIC_READ, 0, pid)
-handle = process.handle
-
-try:
-    while(True):
-        try:
-            base = read_helper(handle, pvz["base"]["addr"], ctypes.c_void_p(), 4)
-            second = read_helper(handle, base + pvz["base"]["second"]["addr"], ctypes.c_void_p(), 4)
-            zombies_count = read_helper(handle, second + pvz["base"]["second"]["zombies_count"]["addr"], ctypes.c_int32(), 4)
+def main():
+    window = win32ui.FindWindow(None, WINDOW_TITLE) 
+    hwnd = window.GetSafeHwnd()
+    pid = win32process.GetWindowThreadProcessId(hwnd)[1]
+    process = win32api.OpenProcess(GENERIC_READ, 0, pid)
+    handle = process.handle
     
-            # search through the zombies list
-            zombies = pvz["base"]["second"]["zombies"]
-            first_zombie = read_helper(handle, second + zombies["addr"], ctypes.c_void_p(), 4)
-            step = zombies["step"]
-            zombies_list = []
-            for p in range(first_zombie, first_zombie + zombies_count * step, step):
-                is_death = read_helper(handle, p + zombies["is_death"]["addr"], ctypes.c_byte(), 1)
-                
-                if (not is_death):
-                    current_zombie = {}
-                    
-                    current_zombie["is_death"] = is_death
-                    current_zombie["hp"] = read_helper(handle, p + zombies["hp"]["addr"], ctypes.c_int32(), 4)
-                    current_zombie["row"] = read_helper(handle, p + zombies["row"]["addr"], ctypes.c_int32(), 4)
-                    current_zombie["zombie_type"] = read_helper(handle, p + zombies["zombie_type"]["addr"], ctypes.c_int32(), 4)
-                    current_zombie["x"] = read_helper(handle, p + zombies["x"]["addr"], ctypes.c_float(), 4)
-                    current_zombie["y"] = read_helper(handle, p + zombies["y"]["addr"], ctypes.c_float(), 4)
-                    current_zombie["hp_max"] = read_helper(handle, p + zombies["hp"]["addr"], ctypes.c_int32(), 4)
-                    current_zombie["hp_equip1"] = read_helper(handle, p + zombies["hp_equip1"]["addr"], ctypes.c_int32(), 4)
-                    current_zombie["hp_equip1_max"] = read_helper(handle, p + zombies["hp_equip1_max"]["addr"], ctypes.c_int32(), 4)
-                    current_zombie["hp_equip2"] = read_helper(handle, p + zombies["hp_equip2"]["addr"], ctypes.c_int32(), 4)
-                    current_zombie["hp_equip2_max"] = read_helper(handle, p + zombies["hp_equip2_max"]["addr"], ctypes.c_int32(), 4)
-                    current_zombie["is_hidden"] = read_helper(handle, p + zombies["is_hidden"]["addr"], ctypes.c_int16(), 2)
-                    
-                    zombies_list.append(current_zombie)
-            
-            red_list = [item for item in zombies_list if item["zombie_type"] == 32]
-            
-            os.system("cls")
-            print_sorted_by_x(red_list, group_by_row=((1, 4), (0, 5)))
-        except TypeError:
-            pass
+    try:
+        while(True):
+            try:
+                base = read_helper(handle, pvz["base"]["addr"], ctypes.c_void_p(), 4)
+                second = read_helper(handle, base + pvz["base"]["second"]["addr"], ctypes.c_void_p(), 4)
+                zombies_count = read_helper(handle, second + pvz["base"]["second"]["zombies_count"]["addr"], ctypes.c_int32(), 4)
         
-        time.sleep(1)
-except(KeyboardInterrupt):
-    print("User exit")
-    exit(0)
+                # search through the zombies list
+                zombies = pvz["base"]["second"]["zombies"]
+                
+                first_zombie = read_helper(handle, second + zombies["addr"], ctypes.c_void_p(), 4)
+                step = zombies["step"]
+                
+                zombies_list = []
+                for p in range(first_zombie, first_zombie + zombies_count * step, step):
+                    is_death = read_helper(handle, p + zombies["is_death"]["addr"], ctypes.c_byte(), 1)
+                    
+                    if (not is_death):
+                        current_zombie = {}
+                        
+                        current_zombie["is_death"] = is_death
+                        current_zombie["hp"] = read_helper(handle, p + zombies["hp"]["addr"], ctypes.c_int32(), 4)
+                        current_zombie["row"] = read_helper(handle, p + zombies["row"]["addr"], ctypes.c_int32(), 4)
+                        current_zombie["zombie_type"] = read_helper(handle, p + zombies["zombie_type"]["addr"], ctypes.c_int32(), 4)
+                        current_zombie["x"] = read_helper(handle, p + zombies["x"]["addr"], ctypes.c_float(), 4)
+                        current_zombie["y"] = read_helper(handle, p + zombies["y"]["addr"], ctypes.c_float(), 4)
+                        current_zombie["hp_max"] = read_helper(handle, p + zombies["hp"]["addr"], ctypes.c_int32(), 4)
+                        current_zombie["hp_equip1"] = read_helper(handle, p + zombies["hp_equip1"]["addr"], ctypes.c_int32(), 4)
+                        current_zombie["hp_equip1_max"] = read_helper(handle, p + zombies["hp_equip1_max"]["addr"], ctypes.c_int32(), 4)
+                        current_zombie["hp_equip2"] = read_helper(handle, p + zombies["hp_equip2"]["addr"], ctypes.c_int32(), 4)
+                        current_zombie["hp_equip2_max"] = read_helper(handle, p + zombies["hp_equip2_max"]["addr"], ctypes.c_int32(), 4)
+                        current_zombie["is_hidden"] = read_helper(handle, p + zombies["is_hidden"]["addr"], ctypes.c_int16(), 2)
+                        
+                        zombies_list.append(current_zombie)
+                
+                red_list = (item for item in zombies_list if item["zombie_type"] == 32)
+                
+                os.system("cls")
+                print_sorted_by_x(red_list, group_by_row=ROW_GROUPS)
+            except TypeError:
+                pass
+            
+            time.sleep(REFRESH_TIME)
+    except(KeyboardInterrupt):
+        print("User exit")
+        exit(0)
+
+if __name__ == "__main__":
+    main()
