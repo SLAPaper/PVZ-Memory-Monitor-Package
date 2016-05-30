@@ -1,146 +1,29 @@
 # below is User config
 WINDOW_TITLE = "Plants vs. Zombies"
-TRACK_TYPE = (32,)
-ROW_GROUPS = ((1,), (2,), (3,), (4,), (5,), (6,),)
+TRACK_TYPE = (32, )
+ROW_GROUPS = ((1, ), (2, ), (3, ), (4, ), (5, ), (6, ), )
 REFRESH_TIME = 1
 REPLACE_X_WITH_COLUMN = True
 SHOW_STATISTIC = False
 STATISTIC_ROW_GROUPS = ROW_GROUPS
-STATISTIC_TRACK_TYPE = (3, 8, 12, 14, 15, 17, 23, 32,)
+STATISTIC_TRACK_TYPE = (3, 8, 12, 14, 15, 17, 23, 32, )
 # above is User config
 
 import os
 import time
-import ctypes
 from collections import OrderedDict
 
-try:
-    import win32ui
-    import win32process
-    import win32api
-    from win32file import GENERIC_READ
-except ImportError:
-    print("The tool requires `pypiwin32` module, try `pip install pypiwin32` to install.")
-    exit(1)
+from PVZ_memory import read_helper
 
 # reference: restricted material
-ZOMBIE_NAME = {
-    0: "普通",
-    1: "旗帜",
-    2: "路障",
-    3: "撑杆",
-    4: "铁桶",
-    5: "报纸",
-    6: "铁门",
-    7: "橄榄",
-    8: "跳舞",
-    9: "伴舞",
-    10: "游泳",
-    11: "潜水",
-    12: "冰车",
-    13: "雪橇",
-    14: "海豚",
-    15: "小丑",
-    16: "气球",
-    17: "矿工",
-    18: "跳跳",
-    19: "雪人",
-    20: "蹦极",
-    21: "梯子",
-    22: "投篮",
-    23: "白眼",
-    24: "小鬼",
-    25: "Boss",
-    26: "豌豆",
-    27: "墙果",
-    28: "辣椒",
-    29: "机枪",
-    30: "倭瓜",
-    31: "高坚",
-    32: "红眼",
-}
+ZOMBIE_NAME = {0: "普通", 1: "旗帜", 2: "路障", 3: "撑杆", 4: "铁桶", 5: "报纸", 6: "铁门", 7: "橄榄", 8: "跳舞", 9: "伴舞", 10: "游泳", 11: "潜水", 12: "冰车", 13: "雪橇", 14: "海豚", 15: "小丑", 16: "气球", 17: "矿工", 18: "跳跳", 19: "雪人", 20: "蹦极", 21: "梯子", 22: "投篮", 23: "白眼", 24: "小鬼", 25: "Boss", 26: "豌豆", 27: "墙果", 28: "辣椒", 29: "机枪", 30: "倭瓜", 31: "高坚", 32: "红眼", }
 
 # reference: http://tieba.baidu.com/p/2843347257?fr=good
-PVZ = {
-    "base": {
-        "addr": 0x6A9EC0,
-        "second": {
-            "addr": 0x768,
-            "zombies_count": {
-                "addr": 0x94,
-                "type": "int32",
-            },
-            "zombies": {
-                "addr": 0x90,
-                "step": 0x15C,
-                "row": {
-                    "addr": 0x1C,
-                    "type": "int32",
-                },
-                "zombie_type": {
-                    "addr": 0x24,
-                    "type": "int32",
-                },
-                "x": {
-                    "addr": 0x2C,
-                    "type": "float",
-                },
-                "y": {
-                    "addr": 0x30,
-                    "type": "float",
-                },
-                "is_fainted": {
-                    "addr": 0xBA,
-                    "type": "Byte",
-                },
-                "hp": {
-                    "addr": 0xC8,
-                    "type": "int32",
-                },
-                "hp_max": {
-                    "addr": 0xCC,
-                    "type": "int32",
-                },
-                "hp_equip1": {
-                    "addr": 0xD0,
-                    "type": "int32",
-                },
-                "hp_equip1_max": {
-                    "addr": 0xD4,
-                    "type": "int32",
-                },
-                "hp_equip2": {
-                    "addr": 0xDC,
-                    "type": "int32",
-                },
-                "hp_equip2_max": {
-                    "addr": 0xE0,
-                    "type": "int32",
-                },
-                "is_death": {
-                    "addr": 0xEC,
-                    "type": "Byte",
-                },
-                "is_hidden": {
-                    "addr": 0x15A,
-                    "type": "int16",
-                },
-            },
-        },
-    }
-}
+PVZ = {"base": {"addr": 0x6A9EC0, "second": {"addr": 0x768, "zombies_count": {"addr": 0x94, "type": "int32", }, "zombies": {"addr": 0x90, "step": 0x15C, "row": {"addr": 0x1C, "type": "int32", }, "zombie_type": {"addr": 0x24, "type": "int32", }, "x": {"addr": 0x2C, "type": "float", }, "y": {"addr": 0x30, "type": "float", }, "is_fainted": {"addr": 0xBA, "type": "Byte", }, "hp": {"addr": 0xC8, "type": "int32", }, "hp_max": {"addr": 0xCC, "type": "int32", }, "hp_equip1": {"addr": 0xD0, "type": "int32", }, "hp_equip1_max": {"addr": 0xD4, "type": "int32", }, "hp_equip2": {"addr": 0xDC, "type": "int32", }, "hp_equip2_max": {"addr": 0xE0, "type": "int32", }, "is_death": {"addr": 0xEC, "type": "Byte", }, "is_hidden": {"addr": 0x15A, "type": "int16", }, }, }, }}
 
-rPM = ctypes.windll.kernel32.ReadProcessMemory
 
 def calc_column_from_x(x):
     return (x - 40) / 80 + 1
-
-
-def read_helper(handle, address, ctypes_var, n_bytes):
-    if(rPM(handle, address, ctypes.byref(ctypes_var), n_bytes, None)):
-        return ctypes_var.value
-    else:
-        raise MemoryError
 
 
 def __print_sort_by_x(zombie_list, group_by_row=None, replace_x_with_colunm=False):
@@ -152,7 +35,7 @@ def __print_sort_by_x(zombie_list, group_by_row=None, replace_x_with_colunm=Fals
         for zombie in zombie_list:
             for row_group in group_by_row:
                 if zombie["row"] + 1 in row_group:
-                     zombie_group_by_row[tuple(row_group)].append(zombie)
+                    zombie_group_by_row[tuple(row_group)].append(zombie)
 
         for item in zombie_group_by_row.items():
             if len(item[1]) > 0:
@@ -166,12 +49,12 @@ def __print_sort_by_x(zombie_list, group_by_row=None, replace_x_with_colunm=Fals
                 if replace_x_with_colunm:
                     print("\nHP\tRow\tColumn\tType")
                     for zombie in sorted_zombie_list:
-                        hp_total = zombie["hp"] + zombie["hp_equip1"] +zombie["hp_equip2"]
+                        hp_total = zombie["hp"] + zombie["hp_equip1"] + zombie["hp_equip2"]
                         print("%d\t%d\t%.2f\t%s" % (hp_total, zombie["row"] + 1, calc_column_from_x(zombie["x"]), ZOMBIE_NAME[zombie["zombie_type"]]))
                 else:
                     print("\nHP\tRow\tx\tType")
                     for zombie in sorted_zombie_list:
-                        hp_total = zombie["hp"] + zombie["hp_equip1"] +zombie["hp_equip2"]
+                        hp_total = zombie["hp"] + zombie["hp_equip1"] + zombie["hp_equip2"]
                         print("%d\t%d\t%.2f\t%s" % (hp_total, zombie["row"] + 1, zombie["x"], ZOMBIE_NAME[zombie["zombie_type"]]))
 
                 print("")
@@ -202,7 +85,7 @@ def __print_row_statistic(zombie_list, group_by_row=None):
         for zombie in zombie_list:
             for row_group in group_by_row:
                 if zombie["row"] + 1 in row_group:
-                        zombie_group_by_row[tuple(row_group)].append(zombie)
+                    zombie_group_by_row[tuple(row_group)].append(zombie)
 
         is_first_row = True
         for item in zombie_group_by_row.items():
@@ -238,7 +121,7 @@ def main():
     handle = process.handle
 
     try:
-        while(True):
+        while (True):
             try:
                 base = read_helper(handle, PVZ["base"]["addr"], ctypes.c_void_p(), 4)
                 second = read_helper(handle, base + PVZ["base"]["second"]["addr"], ctypes.c_void_p(), 4)
@@ -285,9 +168,10 @@ def main():
                 pass
 
             time.sleep(REFRESH_TIME)
-    except(KeyboardInterrupt):
+    except (KeyboardInterrupt):
         print("User exit")
         exit(0)
+
 
 if __name__ == "__main__":
     main()
